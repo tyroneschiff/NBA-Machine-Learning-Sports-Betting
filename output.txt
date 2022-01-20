@@ -1,0 +1,25 @@
+---------------XGBoost Model Predictions---------------
+New York Knicks (67.4%) vs New Orleans Pelicans: UNDER 209.5 (54.5%)
+Dallas Mavericks vs Phoenix Suns (64.8%): UNDER 216.5 (55.4%)
+Golden State Warriors (86.0%) vs Indiana Pacers: UNDER 217.5 (50.0%)
+--------------------Expected Value---------------------
+New York Knicks EV: 4.87
+New Orleans Pelicans EV: -16.91
+Dallas Mavericks EV: -19.04
+Phoenix Suns EV: 8.0
+Golden State Warriors EV: -2.07
+Indiana Pacers EV: -15.92
+------------Neural Network Model Predictions-----------
+New York Knicks (73.2%) vs New Orleans Pelicans: OVER 209.5 (50.3%)
+Dallas Mavericks vs Phoenix Suns (58.2%): UNDER 216.5 (58.2%)
+Golden State Warriors (92.7%) vs Indiana Pacers: OVER 217.5 (51.7%)
+--------------------Expected Value---------------------
+New York Knicks EV: 13.81
+New Orleans Pelicans EV: -31.56
+Dallas Mavericks EV: -3.89
+Phoenix Suns EV: -2.98
+Golden State Warriors EV: 5.58
+Indiana Pacers EV: -56.23
+-------------------------------------------------------
+-----Expected Value > 0 & Agreements between models-----
+New York Knicks

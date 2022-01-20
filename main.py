@@ -4,6 +4,7 @@ import tensorflow as tf
 from src.Predict import NN_Runner, XGBoost_Runner
 from src.Utils.Dictionaries import team_index_current
 from src.Utils.tools import get_json_data, to_data_frame, get_todays_games_json, create_todays_games
+from src.Utils.get_odds import format_odds, get_odds_response
 
 todays_games_url = 'https://data.nba.com/data/10s/v2015/json/mobile_teams/nba/2021/scores/00_todays_scores.json'
 data_url = 'https://stats.nba.com/stats/leaguedashteamstats?' \
@@ -16,7 +17,7 @@ data_url = 'https://stats.nba.com/stats/leaguedashteamstats?' \
            'StarterBench=&TeamID=0&TwoWay=0&VsConference=&VsDivision='
 
 
-def createTodaysGames(games, df):
+def createTodaysGames(games, df, money_line_odds, uo_odds):
     match_data = []
     todays_games_uo = []
     home_team_odds = []
@@ -25,10 +26,16 @@ def createTodaysGames(games, df):
     for game in games:
         home_team = game[0]
         away_team = game[1]
-        todays_games_uo.append(input(home_team + ' vs ' + away_team + ': '))
+        under_over_odds = uo_odds[home_team+''+away_team]
+        print(f'{home_team} vs {away_team}: {under_over_odds}')
+        todays_games_uo.append(uo_odds[home_team+''+away_team])
 
-        home_team_odds.append(input(home_team + ' odds: '))
-        away_team_odds.append(input(away_team + ' odds: '))
+        home_team_odds.append(money_line_odds[home_team])
+        home_money_line = money_line_odds[home_team]
+        print(f'{home_team} odds: {home_money_line}')
+        away_team_odds.append(money_line_odds[away_team])
+        away_money_line = money_line_odds[away_team]
+        print(f'{away_team} odds: {away_money_line}')
 
         home_team_series = df.iloc[team_index_current.get(home_team)]
         away_team_series = df.iloc[team_index_current.get(away_team)]
@@ -50,7 +57,9 @@ def main():
     games = create_todays_games(data)
     data = get_json_data(data_url)
     df = to_data_frame(data)
-    data, todays_games_uo, frame_ml, home_team_odds, away_team_odds = createTodaysGames(games, df)
+    odds_response = get_odds_response()
+    money_line_odds, uo_odds = format_odds(odds_response)
+    data, todays_games_uo, frame_ml, home_team_odds, away_team_odds = createTodaysGames(games, df, money_line_odds, uo_odds)
     if args.nn:
         print("------------Neural Network Model Predictions-----------")
         data = tf.keras.utils.normalize(data, axis=1)
@@ -62,12 +71,22 @@ def main():
         print("-------------------------------------------------------")
     if args.A:
         print("---------------XGBoost Model Predictions---------------")
-        XGBoost_Runner.xgb_runner(data, todays_games_uo, frame_ml, games, home_team_odds, away_team_odds)
+        xgb_preds= XGBoost_Runner.xgb_runner(data, todays_games_uo, frame_ml, games, home_team_odds, away_team_odds)
         print("-------------------------------------------------------")
         data = tf.keras.utils.normalize(data, axis=1)
         print("------------Neural Network Model Predictions-----------")
-        NN_Runner.nn_runner(data, todays_games_uo, frame_ml, games, home_team_odds, away_team_odds)
+        nnpreds = NN_Runner.nn_runner(data, todays_games_uo, frame_ml, games, home_team_odds, away_team_odds)
         print("-------------------------------------------------------")
+        #print(xgb_preds)
+        #print(nnpreds)
+        myDict1 = {key:val for key, val in xgb_preds.items() if val['ev'] > 0}
+        myDict2 = {key:val for key, val in nnpreds.items() if val['ev'] > 0}
+        d = [k for k in (set(myDict1) & set(myDict2)) if (myDict1[k] != myDict2[k])]
+        f = open('/home/admin_/NBA-Machine-Learning-Sports-Betting/output.txt', "a")
+        f.write("-------------------------------------------------------\n")
+        f.write("-----Expected Value > 0 & Agreements between models-----\n")
+        for x in d:
+            f.write(f'{x}\n')
 
 
 if __name__ == "__main__":
